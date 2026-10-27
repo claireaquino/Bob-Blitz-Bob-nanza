@@ -19,20 +19,143 @@
       overflow-x: hidden;
     }
 
+    #title-container {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-bottom: 8px;
+      z-index: 10;
+    }
+
     h1 {
       font-family: 'Fredoka One', cursive;
       font-size: 2.6rem;
-      margin-bottom: 6px;
+      margin: 4px 0;
       letter-spacing: 3px;
       color: #fff;
       text-shadow: 0 0 14px #ff6ff2, 0 0 32px #c44dff, 3px 3px 0 #8b00d4;
       animation: titlePulse 2.4s ease-in-out infinite;
       position: relative;
       z-index: 1;
+      transition: text-shadow 0.3s ease, color 0.3s ease;
     }
     @keyframes titlePulse {
       0%, 100% { text-shadow: 0 0 14px #ff6ff2, 0 0 32px #c44dff, 3px 3px 0 #8b00d4; }
       50%       { text-shadow: 0 0 26px #ffe0ff, 0 0 55px #e066ff, 3px 3px 0 #6a009f; }
+    }
+
+    /* Circus marquee light strings */
+    .circus-lights {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 14px;
+      padding: 2px 0;
+      opacity: 0.3;
+      transition: opacity 0.4s ease;
+    }
+
+    .bulb {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #ffe566;
+      display: inline-block;
+      transition: all 0.3s ease;
+    }
+
+    /* Active circus blinking lights during gameplay */
+    #title-container.playing .circus-lights {
+      opacity: 1;
+    }
+
+    /* Alternating circus marquee bulb chase */
+    #title-container.playing .bulb:nth-child(4n+1) {
+      color: #ffd600;
+      background: #ffd600;
+      animation: circusBulbA 0.4s ease-in-out infinite alternate;
+    }
+    #title-container.playing .bulb:nth-child(4n+2) {
+      color: #ff2d87;
+      background: #ff2d87;
+      animation: circusBulbB 0.4s ease-in-out infinite alternate;
+    }
+    #title-container.playing .bulb:nth-child(4n+3) {
+      color: #00e5ff;
+      background: #00e5ff;
+      animation: circusBulbA 0.4s ease-in-out infinite alternate 0.2s;
+    }
+    #title-container.playing .bulb:nth-child(4n+4) {
+      color: #76ff03;
+      background: #76ff03;
+      animation: circusBulbB 0.4s ease-in-out infinite alternate 0.2s;
+    }
+
+    @keyframes circusBulbA {
+      0% {
+        opacity: 0.25;
+        transform: scale(0.85);
+        box-shadow: 0 0 2px currentColor;
+      }
+      100% {
+        opacity: 1;
+        transform: scale(1.4);
+        box-shadow: 0 0 10px currentColor, 0 0 22px currentColor;
+      }
+    }
+
+    @keyframes circusBulbB {
+      0% {
+        opacity: 1;
+        transform: scale(1.4);
+        box-shadow: 0 0 10px currentColor, 0 0 22px currentColor;
+      }
+      100% {
+        opacity: 0.25;
+        transform: scale(0.85);
+        box-shadow: 0 0 2px currentColor;
+      }
+    }
+
+    /* Circus blinking light glow for title text during gameplay */
+    #title-container.playing h1 {
+      animation: circusTitleBlink 0.9s ease-in-out infinite alternate;
+    }
+
+    @keyframes circusTitleBlink {
+      0% {
+        color: #fff;
+        text-shadow:
+          0 0 10px #ffe566,
+          0 0 22px #ff6ff2,
+          0 0 40px #c44dff,
+          3px 3px 0 #8b00d4;
+      }
+      33% {
+        color: #fffde7;
+        text-shadow:
+          0 0 14px #00e5ff,
+          0 0 28px #00b0ff,
+          0 0 50px #651fff,
+          3px 3px 0 #311b92;
+      }
+      66% {
+        color: #fff;
+        text-shadow:
+          0 0 14px #ff4081,
+          0 0 32px #f50057,
+          0 0 52px #ff1744,
+          3px 3px 0 #880e4f;
+      }
+      100% {
+        color: #fffff0;
+        text-shadow:
+          0 0 18px #ffd600,
+          0 0 36px #ff6d00,
+          0 0 60px #e040fb,
+          3px 3px 0 #4a148c;
+      }
     }
 
     #score-board {
@@ -467,7 +590,39 @@
 </head>
 <body>
 
-<h1>Bob Blitz: Bob-nanza!</h1>
+<div id="title-container">
+  <div class="circus-lights top-lights" aria-hidden="true">
+    <span class="bulb"></span>
+    <span class="bulb"></span>
+    <span class="bulb"></span>
+    <span class="bulb"></span>
+    <span class="bulb"></span>
+    <span class="bulb"></span>
+    <span class="bulb"></span>
+    <span class="bulb"></span>
+    <span class="bulb"></span>
+    <span class="bulb"></span>
+    <span class="bulb"></span>
+    <span class="bulb"></span>
+    <span class="bulb"></span>
+  </div>
+  <h1 id="game-title">Bob Blitz: Bob-nanza!</h1>
+  <div class="circus-lights bottom-lights" aria-hidden="true">
+    <span class="bulb"></span>
+    <span class="bulb"></span>
+    <span class="bulb"></span>
+    <span class="bulb"></span>
+    <span class="bulb"></span>
+    <span class="bulb"></span>
+    <span class="bulb"></span>
+    <span class="bulb"></span>
+    <span class="bulb"></span>
+    <span class="bulb"></span>
+    <span class="bulb"></span>
+    <span class="bulb"></span>
+    <span class="bulb"></span>
+  </div>
+</div>
 <div id="score-board">
   <div>SCORE: <span id="score">0</span></div>
   <div>TIME: <span id="timer">30</span>s</div>
@@ -961,6 +1116,7 @@
     }
     stopBgm();
     stopAttractBgm();
+    document.getElementById('title-container').classList.remove('playing');
     setButtons(true);
     btnDrop.disabled = true;
     msgEl.textContent = 'Thank you for playing Bob Blitz: Bob-nanza! Claim your prize now!';
@@ -1005,6 +1161,7 @@
     if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
     stopBgm();
     stopAttractBgm();
+    document.getElementById('title-container').classList.remove('playing');
     score = 0; timeLeft = 30; clawX = 180; armLength = 0;
     dropping = false; collectedPrizes = [];
     binEl.innerHTML = '';
@@ -1035,6 +1192,7 @@
     sfxLetsGo();
     stopAttractBgm();
     document.getElementById('ready-overlay').classList.add('hidden');
+    document.getElementById('title-container').classList.add('playing');
     setButtons(false);
     // Short delay so the launch SFX plays before game BGM kicks in
     setTimeout(() => { startBgm(); startTimer(); }, 500);
