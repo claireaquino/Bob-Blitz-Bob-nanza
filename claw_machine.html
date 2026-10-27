@@ -964,6 +964,10 @@
     btnDrop.disabled = true;
     msgEl.textContent = 'Thank you for playing Bob Blitz: Bob-nanza! Claim your prize now!';
 
+    // Play congratulatory end-game sound effect & fanfare
+    sfxGameOver(score);
+    if (score > 0) triggerConfetti();
+
     // Determine prize based on score
     let prizeMsg;
     if (score === 0) {
@@ -1188,6 +1192,58 @@
     playTone(784,  'square',t + 0.40, 0.25, 0.18, ctx, dest);
   }
 
+  // ---- SFX: Game Over / Victory Celebration Fanfare ----
+  function sfxGameOver(finalScore) {
+    const ctx  = getAudioCtx();
+    const dest = ctx.destination;
+    const t    = ctx.currentTime;
+
+    // Time-up whistle to cleanly signal the end of timer
+    playTone(880, 'sine', t,        0.12, 0.25, ctx, dest);
+    playTone(440, 'sine', t + 0.10, 0.20, 0.20, ctx, dest);
+
+    if (finalScore > 0) {
+      // Congratulatory celebratory brass fanfare
+      const brassNotes = [
+        [523.25, 0.30, 0.16], // C5
+        [523.25, 0.48, 0.16], // C5
+        [523.25, 0.66, 0.16], // C5
+        [659.25, 0.84, 0.45], // E5
+        [587.33, 1.32, 0.16], // D5
+        [659.25, 1.50, 0.16], // E5
+        [783.99, 1.68, 0.55], // G5
+        [1046.5, 2.28, 0.90]  // C6 (Triumphant finish)
+      ];
+
+      brassNotes.forEach(([f, dt, dur]) => {
+        playTone(f,       'square',   t + dt, dur, 0.20, ctx, dest);
+        playTone(f * 0.5, 'triangle', t + dt, dur, 0.18, ctx, dest);
+      });
+
+      // Supporting harmony chords on major victory beats
+      const chords = [
+        [0.84, [329.63, 392.00, 523.25, 659.25]],
+        [1.68, [392.00, 493.88, 587.33, 783.99]],
+        [2.28, [523.25, 659.25, 783.99, 1046.5]],
+      ];
+
+      chords.forEach(([dt, freqs]) => {
+        freqs.forEach(f => {
+          playTone(f, 'sine', t + dt, 0.7, 0.10, ctx, dest);
+        });
+      });
+
+      // Sparkle chime bells on the final triumph chord
+      [1567.98, 2093.00, 2637.02, 3135.96].forEach((f, i) => {
+        playTone(f, 'sine', t + 2.35 + i * 0.08, 0.4, 0.12, ctx, dest);
+      });
+    } else {
+      // Gentle completion chime
+      const gentle = [523, 440, 392, 329];
+      gentle.forEach((f, i) => playTone(f, 'sine', t + 0.35 + i * 0.15, 0.3, 0.20, ctx, dest));
+    }
+  }
+
   // ---- Attract BGM: slower, dreamier chiptune for the intro screens ----
   const ATTRACT_TEMPO     = 130;
   const ATTRACT_BEAT      = 60 / ATTRACT_TEMPO;
@@ -1348,9 +1404,11 @@
   const BGM_BAR_BEATS = 8;
   const BGM_BAR_SEC   = BGM_BAR_BEATS * BGM_BEAT;
 
+  let bgmMasterGain = null;
+
   function scheduleBgmBar(startTime) {
     const ctx  = getAudioCtx();
-    const dest = ctx.destination;
+    const dest = bgmMasterGain || ctx.destination;
     BGM_NOTES.forEach(([freq, beat, dur]) => {
       const t   = startTime + beat * BGM_BEAT;
       const osc = ctx.createOscillator();
@@ -1372,6 +1430,9 @@
     bgmPlaying = true;
     const ctx = getAudioCtx();
     if (ctx.state === 'suspended') ctx.resume();
+    bgmMasterGain = ctx.createGain();
+    bgmMasterGain.gain.setValueAtTime(1, ctx.currentTime);
+    bgmMasterGain.connect(ctx.destination);
     let nextStart = ctx.currentTime + 0.05;
 
     function loop() {
@@ -1386,7 +1447,12 @@
   function stopBgm() {
     bgmPlaying = false;
     if (bgmLoopTimeout) { clearTimeout(bgmLoopTimeout); bgmLoopTimeout = null; }
-    // AudioContext oscillators will naturally expire; no forced stop needed
+    if (bgmMasterGain) {
+      const ctx = getAudioCtx();
+      bgmMasterGain.gain.setValueAtTime(bgmMasterGain.gain.value, ctx.currentTime);
+      bgmMasterGain.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.05);
+      bgmMasterGain = null;
+    }
   }
 
   init();
