@@ -787,15 +787,24 @@
       const j = Math.floor(Math.random() * (i + 1));
       [allItems[i], allItems[j]] = [allItems[j], allItems[i]];
     }
-    allItems.forEach(type => {
+    // Jittered grid: one prize per cell so prizes spread evenly across the play area
+    const COLS = 7;
+    const ROWS = Math.ceil(allItems.length / COLS);
+    const AREA_X = 10;
+    const AREA_W = CONTAINER_W - 86;
+    const AREA_Y = PLAY_H * 0.58;
+    const AREA_H = PLAY_H * 0.26;
+    const cellW = AREA_W / COLS;
+    const cellH = AREA_H / ROWS;
+    allItems.forEach((type, i) => {
       const el = document.createElement('div');
       el.classList.add('prize');
       el.innerHTML = type.html;
       el.dataset.label = type.label;
       el.dataset.points = type.points;
       el.dataset.addTime = type.addTime || 0;
-      const x = 10 + Math.random() * (CONTAINER_W - 86);
-      const y = (PLAY_H * 0.58) + Math.random() * (PLAY_H * 0.26);
+      const x = AREA_X + (i % COLS) * cellW + Math.random() * cellW;
+      const y = AREA_Y + Math.floor(i / COLS) * cellH + Math.random() * cellH;
       el.style.left = x + 'px';
       el.style.top  = y + 'px';
       container.appendChild(el);
