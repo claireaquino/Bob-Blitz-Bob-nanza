@@ -960,12 +960,13 @@
       timerInterval = null;
     }
     stopBgm();
+    stopAttractBgm();
     setButtons(true);
     btnDrop.disabled = true;
     msgEl.textContent = 'Thank you for playing Bob Blitz: Bob-nanza! Claim your prize now!';
 
-    // Play congratulatory end-game sound effect & fanfare
-    sfxGameOver(score);
+    // Play prize and score reveal sound effect (BGM stopped so no overlap)
+    sfxPrizeReveal(score);
     if (score > 0) triggerConfetti();
 
     // Determine prize based on score
@@ -1192,55 +1193,56 @@
     playTone(784,  'square',t + 0.40, 0.25, 0.18, ctx, dest);
   }
 
-  // ---- SFX: Game Over / Victory Celebration Fanfare ----
-  function sfxGameOver(finalScore) {
+  // ---- SFX: Prize & Final Score Reveal Celebration ----
+  function sfxPrizeReveal(finalScore) {
     const ctx  = getAudioCtx();
     const dest = ctx.destination;
     const t    = ctx.currentTime;
 
-    // Time-up whistle to cleanly signal the end of timer
-    playTone(880, 'sine', t,        0.12, 0.25, ctx, dest);
-    playTone(440, 'sine', t + 0.10, 0.20, 0.20, ctx, dest);
-
     if (finalScore > 0) {
-      // Congratulatory celebratory brass fanfare
-      const brassNotes = [
-        [523.25, 0.30, 0.16], // C5
-        [523.25, 0.48, 0.16], // C5
-        [523.25, 0.66, 0.16], // C5
-        [659.25, 0.84, 0.45], // E5
-        [587.33, 1.32, 0.16], // D5
-        [659.25, 1.50, 0.16], // E5
-        [783.99, 1.68, 0.55], // G5
-        [1046.5, 2.28, 0.90]  // C6 (Triumphant finish)
+      // 1. Magical sparkle intro sweep
+      [1046.5, 1318.5, 1568.0, 2093.0].forEach((f, i) => {
+        playTone(f, 'sine', t + i * 0.06, 0.15, 0.22, ctx, dest);
+      });
+
+      // 2. Triumphant prize brass fanfare stabs (square + triangle)
+      const fanfare = [
+        [523.25, 0.28, 0.16], // C5
+        [659.25, 0.46, 0.16], // E5
+        [783.99, 0.64, 0.22], // G5
+        [659.25, 0.88, 0.14], // E5
+        [783.99, 1.04, 0.14], // G5
+        [1046.5, 1.20, 0.50], // C6
+        [1318.5, 1.72, 0.70]  // E6 (Grand Victory Hold)
       ];
 
-      brassNotes.forEach(([f, dt, dur]) => {
-        playTone(f,       'square',   t + dt, dur, 0.20, ctx, dest);
+      fanfare.forEach(([f, dt, dur]) => {
+        playTone(f,       'square',   t + dt, dur, 0.22, ctx, dest);
         playTone(f * 0.5, 'triangle', t + dt, dur, 0.18, ctx, dest);
       });
 
-      // Supporting harmony chords on major victory beats
+      // 3. Rich celebratory harmony chords under the fanfare
       const chords = [
-        [0.84, [329.63, 392.00, 523.25, 659.25]],
-        [1.68, [392.00, 493.88, 587.33, 783.99]],
-        [2.28, [523.25, 659.25, 783.99, 1046.5]],
+        [0.28, [261.63, 329.63, 392.00]],          // C maj
+        [0.64, [349.23, 440.00, 523.25]],          // F maj
+        [1.20, [392.00, 493.88, 587.33, 783.99]], // G maj
+        [1.72, [523.25, 659.25, 783.99, 1046.5]], // C maj (Full Grand Chord)
       ];
 
       chords.forEach(([dt, freqs]) => {
         freqs.forEach(f => {
-          playTone(f, 'sine', t + dt, 0.7, 0.10, ctx, dest);
+          playTone(f, 'sine', t + dt, 0.8, 0.12, ctx, dest);
         });
       });
 
-      // Sparkle chime bells on the final triumph chord
-      [1567.98, 2093.00, 2637.02, 3135.96].forEach((f, i) => {
-        playTone(f, 'sine', t + 2.35 + i * 0.08, 0.4, 0.12, ctx, dest);
+      // 4. Sparkling bell cascade on the grand reveal
+      [1567.98, 2093.00, 2637.02, 3135.96, 4186.01].forEach((f, i) => {
+        playTone(f, 'sine', t + 1.80 + i * 0.09, 0.5, 0.14, ctx, dest);
       });
     } else {
-      // Gentle completion chime
-      const gentle = [523, 440, 392, 329];
-      gentle.forEach((f, i) => playTone(f, 'sine', t + 0.35 + i * 0.15, 0.3, 0.20, ctx, dest));
+      // Gentle outro chime
+      const gentle = [523.25, 440.00, 349.23, 261.63];
+      gentle.forEach((f, i) => playTone(f, 'sine', t + 0.15 + i * 0.15, 0.35, 0.20, ctx, dest));
     }
   }
 
@@ -1449,8 +1451,11 @@
     if (bgmLoopTimeout) { clearTimeout(bgmLoopTimeout); bgmLoopTimeout = null; }
     if (bgmMasterGain) {
       const ctx = getAudioCtx();
-      bgmMasterGain.gain.setValueAtTime(bgmMasterGain.gain.value, ctx.currentTime);
-      bgmMasterGain.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.05);
+      try {
+        bgmMasterGain.gain.cancelScheduledValues(ctx.currentTime);
+        bgmMasterGain.gain.setValueAtTime(bgmMasterGain.gain.value, ctx.currentTime);
+        bgmMasterGain.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.015);
+      } catch (e) {}
       bgmMasterGain = null;
     }
   }
