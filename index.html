@@ -1191,11 +1191,16 @@
   document.getElementById('btn-ready').addEventListener('click', () => {
     sfxLetsGo();
     stopAttractBgm();
+    stopBgm();
     document.getElementById('ready-overlay').classList.add('hidden');
     document.getElementById('title-container').classList.add('playing');
     setButtons(false);
     // Short delay so the launch SFX plays before game BGM kicks in
-    setTimeout(() => { startBgm(); startTimer(); }, 500);
+    setTimeout(() => {
+      stopAttractBgm();
+      startBgm();
+      startTimer();
+    }, 500);
   });
 
   // =====================================================================
@@ -1521,11 +1526,11 @@
   }
 
   function startAttractBgm() {
+    stopBgm(); // Ensure game BGM is stopped completely
     if (attractPlaying) return;
     attractPlaying = true;
     const ctx = getAudioCtx();
     if (ctx.state === 'suspended') ctx.resume();
-    // Create a fresh master gain node so in-flight notes can be silenced instantly
     attractMasterGain = ctx.createGain();
     attractMasterGain.gain.setValueAtTime(1, ctx.currentTime);
     attractMasterGain.connect(ctx.destination);
@@ -1542,11 +1547,13 @@
   function stopAttractBgm() {
     attractPlaying = false;
     if (attractTimeout) { clearTimeout(attractTimeout); attractTimeout = null; }
-    // Ramp master gain to 0 in 50ms — silences all in-flight oscillators immediately
     if (attractMasterGain) {
       const ctx = getAudioCtx();
-      attractMasterGain.gain.setValueAtTime(attractMasterGain.gain.value, ctx.currentTime);
-      attractMasterGain.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.05);
+      try {
+        attractMasterGain.gain.cancelScheduledValues(ctx.currentTime);
+        attractMasterGain.gain.setValueAtTime(attractMasterGain.gain.value, ctx.currentTime);
+        attractMasterGain.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.015);
+      } catch (e) {}
       attractMasterGain = null;
     }
   }
@@ -1586,7 +1593,8 @@
   }
 
   function startBgm() {
-    if (bgmPlaying) return;
+    stopAttractBgm(); // Guaranteed stop of attract screen music
+    if (bgmPlaying) return; // Prevent multiple concurrent BGM instances
     bgmPlaying = true;
     const ctx = getAudioCtx();
     if (ctx.state === 'suspended') ctx.resume();
