@@ -499,6 +499,15 @@
     #intro-box p,
     #ready-box p { white-space: nowrap; }
 
+    #ready-box .ready-top { margin-bottom: 16px; }
+    #menu-board-img {
+      display: block;
+      max-width: 100%;
+      max-height: 40vh;
+      height: auto;
+      margin: 0 auto 16px;
+    }
+
     #prize-overlay {
       position: fixed;
       inset: 0;
@@ -677,7 +686,9 @@
 
 <div id="ready-overlay" class="hidden">
   <div id="ready-box">
-    <p>You have 30 seconds<br>to grab as many IBM Bob as you can!<br><br>Are you ready to play?</p>
+    <p class="ready-top">You have 30 seconds<br>to grab as many IBM Bob as you can!</p>
+    <img id="menu-board-img" src="Menu Board.png" alt="Menu Board">
+    <p>Are you ready to play?</p>
     <button id="btn-ready">YES, LET'S GO!</button>
   </div>
 </div>
